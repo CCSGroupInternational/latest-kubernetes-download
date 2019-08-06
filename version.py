@@ -1,6 +1,8 @@
 import re
 from google.cloud import storage
 
+BASE_URL = "https://storage.googleapis.com/kubernetes-release/"
+
 # Kubernetes release binaries are published in a google cloud bucket
 # The logic was found on https://github.com/chuckha/downloadkubernetes
 
@@ -21,5 +23,10 @@ for blob in kubernetes_release_blobs:
 version_list.sort(key=lambda s: list(map(int, s.split("."))))
 latest_major_version = version_list[-1]
 latest_full_version_blob = bucket.blob(f"release/stable-{latest_major_version}.txt")
-latest_full_version = latest_full_version_blob.download_as_string().decode()
+latest_full_version = latest_full_version_blob.download_as_string().decode().strip("\n")
 print("Latest kubernetes version is", latest_full_version)
+binaries = storage_client.list_blobs(
+    bucket, prefix=f"release/{latest_full_version}/bin/linux/"
+)
+for binary in binaries:
+    print(f"{BASE_URL}{binary.name}")
